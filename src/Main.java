@@ -1,8 +1,9 @@
-import java.util.Arrays;
+import java.io.File;
+import java.io.IOException;
 import java.util.Scanner;
 
 public class Main {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
 
         Scanner scanner = new Scanner(System.in);
 
@@ -14,22 +15,32 @@ public class Main {
                 new Product("Манная крупа", 60)};
 
         System.out.println("<<<Список возможных товаров для покупки>>>");
+        printAvailableProducts(products);
 
-        for (int i = 0; i < products.length; i++) {
-            System.out.println(products[i].getProductId() + ". " +
-                    products[i].getName() + " - " + products[i].getPrice() + "руб/шт");
+        File basketFile = new File("basket.txt");
+
+        Basket basket;
+        if (basketFile.exists()) {
+            basket = Basket.loadFromTxtFile(basketFile);
+        } else {
+            basket = new Basket(products);
         }
 
-        int shoppingCart = 0;
-
         while (true) {
-            System.out.println("Введите номер товара и его количество, или `end` для итога:");
+            System.out.print("Введите номер товара и его количество, " +
+                    "\n`save` - для сохранния корзины в файл и выхода,\n" +
+                    "`cart` - для вывода итоговой корзины:\n>>");
             String input = scanner.nextLine();
 
-            if (input.equalsIgnoreCase("end")) {
-                System.out.println("Корзина:\n" + Arrays.toString(products));
-                System.out.println("Итого: " + shoppingCart + "руб");
+            if (input.equalsIgnoreCase("save")) {
+                basket.saveTxt(basketFile);
                 break;
+            }
+
+            if (input.equalsIgnoreCase("cart")) {
+                System.out.print("Корзина:\n" + basket.printCart());
+                System.out.println("Итого: " + basket.getCartTotalValue() + "руб\n");
+                continue;
             }
 
             String[] productIdAndCount = input.split(" ");
@@ -59,12 +70,23 @@ public class Main {
                 continue;
             }
 
-            for (Product product : products) {
-                if (productId == product.getProductId()) {
-                    product.setProductCount(product.getProductCount() + productCount);
-                    shoppingCart += product.getProductCount() * product.getPrice();
-                }
-            }
+            addToCart(basket, productId, productCount);
+
+        }
+    }
+
+    private static void addToCart(Basket basket, int productId, int productCount) {
+        if (basket.addToCart(productId, productCount)) {
+            System.out.println("Продукт добавлен в корзину\n");
+        } else {
+            System.out.println("Не получилось добавить продукт\n");
+        }
+    }
+
+    private static void printAvailableProducts(Product[] products) {
+        for (int i = 0; i < products.length; i++) {
+            System.out.println(products[i].getProductId() + ". " +
+                    products[i].getName() + " - " + products[i].getPrice() + "руб/шт");
         }
     }
 }
