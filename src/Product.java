@@ -1,4 +1,6 @@
-public class Product {
+import java.io.Serializable;
+
+public class Product implements Serializable {
     private static int id = 0;
     private final int productId;
     private final String name;

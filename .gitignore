@@ -1,6 +1,7 @@
 ### intelliJ idea ###
 *.iml
 .idea
+basket.bin
 basket.txt
 target/
 out/

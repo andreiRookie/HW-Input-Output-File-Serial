@@ -2,13 +2,43 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Basket {
+public class Basket implements Serializable {
+    public static final String BASKET_BIN_DIR_NAME = "./basket";
+    public static final String BASKET_BIN_FILE_NAME = "./basket/basket.bin";
     private Product[] products;
 
     public Basket(Product[] products) {
         this.products = products;
     }
 
+    public void saveBin(File file) {
+        try (FileOutputStream fileOutStream = new FileOutputStream(file);
+        ObjectOutputStream objOutStream = new ObjectOutputStream(fileOutStream)) {
+
+            objOutStream.writeObject(this);
+
+            objOutStream.flush();
+
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+    public static Basket loadFromBinFile(File file) {
+        Basket basket = null;
+        try (FileInputStream fileInputStream = new FileInputStream(file);
+            ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream)) {
+
+            basket = (Basket) objectInputStream.readObject();
+
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+        } catch (ClassNotFoundException e) {
+            System.out.println(e.getMessage());
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+        return basket;
+    }
     public void saveTxt(File txtFile) throws IOException {
         try (FileWriter writer = new FileWriter(txtFile)) {
             for (Product p : products) {
