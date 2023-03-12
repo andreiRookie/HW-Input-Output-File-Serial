@@ -1,6 +1,7 @@
 ### intelliJ idea ###
 *.iml
 .idea
-basket.txt
+basket/
+client log/
 target/
 out/

@@ -1,3 +1,4 @@
+import log.ClientLog;
 import java.io.File;
 import java.io.IOException;
 import java.util.Scanner;
@@ -7,18 +8,16 @@ public class Main {
 
         Scanner scanner = new Scanner(System.in);
 
-        Product[] products = {
-                new Product("Хлеб", 40),
-                new Product("Молоко", 90),
-                new Product("Гречневая крупа", 70),
-                new Product("Бананы", 80),
-                new Product("Манная крупа", 60)};
-
+        Product[] products = getProductArray();
         System.out.println("<<<Список возможных товаров для покупки>>>");
         printAvailableProducts(products);
 
-        File basketFile = new File("basket.txt");
+        ClientLog clientLog = new ClientLog();
+        ClientLog.makeClientLogDir(ClientLog.LOG_DIR_NAME);
+        File logFile = new File(ClientLog.LOG_CSV_FILE_NAME);
 
+        Basket.makeBasketDir(Basket.BASKET_DIR_NAME);
+        File basketFile = new File(Basket.BASKET_TXT_FILE_NAME);
         Basket basket;
         if (basketFile.exists()) {
             basket = Basket.loadFromTxtFile(basketFile);
@@ -27,20 +26,28 @@ public class Main {
         }
 
         while (true) {
-            System.out.print("Введите номер товара и его количество, " +
-                    "\n`save` - для сохранния корзины в файл и выхода,\n" +
-                    "`cart` - для вывода итоговой корзины:\n>>");
+            showMenu();
             String input = scanner.nextLine();
 
-            if (input.equalsIgnoreCase("save")) {
+            if (input.equalsIgnoreCase("log")) {
+                System.out.println(clientLog);
+                continue;
+            }
+
+            if (input.equalsIgnoreCase("txt")) {
                 basket.saveTxt(basketFile);
-                break;
+                continue;
             }
 
             if (input.equalsIgnoreCase("cart")) {
-                System.out.print("Корзина:\n" + basket.printCart());
-                System.out.println("Итого: " + basket.getCartTotalValue() + "руб\n");
+                printTotalCart(basket);
                 continue;
+            }
+
+            if (input.equalsIgnoreCase("exit")) {
+                clientLog.exportAsCSV(logFile);
+                printTotalCart(basket);
+                break;
             }
 
             String[] productIdAndCount = input.split(" ");
@@ -70,12 +77,51 @@ public class Main {
                 continue;
             }
 
-            addToCart(basket, productId, productCount);
+            addToCartAndPrintResult(basket,productId, productCount);
+            clientLog.log(productId, productCount);
 
         }
     }
 
-    private static void addToCart(Basket basket, int productId, int productCount) {
+//    private static void inputChecks(String input, Basket basket, ClientLog clientLog) {
+//
+//        if (input.equalsIgnoreCase("log")) {
+//            System.out.println(clientLog);
+//            continue;
+//        }
+//
+//        if (input.equalsIgnoreCase("txt")) {
+//            basket.saveTxt(basketFile);
+//            continue;
+//        }
+//
+//        if (input.equalsIgnoreCase("cart")) {
+//            printTotalCart(basket);
+//            continue;
+//        }
+//
+//        if (input.equalsIgnoreCase("exit")) {
+//            printTotalCart(basket);
+//            break;
+//        }
+//    }
+
+    private static void showMenu() {
+        System.out.print("""
+                Введите номер товара и его количество,
+                `txt` - для сохранния корзины в файл .txt,
+                `cart` - для вывода итоговой корзины:
+                `log` - для вывода журанала покупок
+                `exit` - для выхода
+                >>>""");
+    }
+
+    private static void printTotalCart(Basket basket){
+        System.out.print("Корзина:\n" + basket.printCart());
+        System.out.println("Итого: " + basket.getCartTotalValue() + "руб\n");
+    }
+
+    private static void addToCartAndPrintResult(Basket basket, int productId, int productCount) {
         if (basket.addToCart(productId, productCount)) {
             System.out.println("Продукт добавлен в корзину\n");
         } else {
@@ -84,9 +130,17 @@ public class Main {
     }
 
     private static void printAvailableProducts(Product[] products) {
-        for (int i = 0; i < products.length; i++) {
-            System.out.println(products[i].getProductId() + ". " +
-                    products[i].getName() + " - " + products[i].getPrice() + "руб/шт");
+        for (Product product : products) {
+            System.out.println(product.getProductId() + ". " +
+                    product.getName() + " - " + product.getPrice() + "руб/шт");
         }
+    }
+
+    private static Product[] getProductArray() {
+        return new Product[]{new Product("Хлеб", 40),
+                new Product("Молоко", 90),
+                new Product("Гречневая крупа", 70),
+                new Product("Бананы", 80),
+                new Product("Манная крупа", 60)};
     }
 }

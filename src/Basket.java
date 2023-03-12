@@ -1,15 +1,20 @@
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class Basket {
+
+    public static final String BASKET_DIR_NAME = "./basket";
+    public static final String BASKET_TXT_FILE_NAME = "./basket/basket.txt";
+    public static final String BASKET_JSON_FILE_NAME = "./basket/basket.json";
     private Product[] products;
 
     public Basket(Product[] products) {
         this.products = products;
     }
 
-    public void saveTxt(File txtFile) throws IOException {
+    public void saveTxt(File txtFile) {
         try (FileWriter writer = new FileWriter(txtFile)) {
             for (Product p : products) {
                 writer.write(
@@ -43,7 +48,7 @@ public class Basket {
                 list.add(product);
             }
         } catch (IOException e) {
-            System.out.println(e.getMessage());
+            e.printStackTrace();
         }
         return new Basket(list.toArray(new Product[0]));
     }
@@ -57,6 +62,25 @@ public class Basket {
         }
         return false;
     }
+
+    public static void makeBasketDir(String dirName) {
+        File dir = new File(dirName);
+        try {
+            dir.mkdir();
+        } catch (SecurityException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+//    public static File makeBasketFile(String fileName) {
+//        File file = new File(fileName);
+//        try {
+//            file.createNewFile();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//        return file;
+//    }
 
     public String printCart() {
         StringBuilder sb = new StringBuilder();

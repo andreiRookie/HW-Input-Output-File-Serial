@@ -9,8 +9,8 @@ public class Product {
         this.name = name;
         this.price = price;
         this.productCount = 0;
-        id++; // Product.id++
-        this.productId = id;
+//        ++id; // Product.id++
+        this.productId = ++id;
     }
 
     public Product(int id, String name, int price) {
