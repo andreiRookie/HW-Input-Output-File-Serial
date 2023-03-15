@@ -1,9 +1,16 @@
 import log.ClientLog;
+import org.w3c.dom.*;
+import org.xml.sax.SAXException;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
+import java.io.IOException;
 import java.util.Scanner;
 
 public class Main {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws ParserConfigurationException, IOException, SAXException {
 
         Scanner scanner = new Scanner(System.in);
 
@@ -11,19 +18,43 @@ public class Main {
         System.out.println("<<<Список возможных товаров для покупки>>>");
         printAvailableProducts(products);
 
+        // Log
         ClientLog clientLog = new ClientLog();
         ClientLog.makeClientLogDir(ClientLog.LOG_DIR_NAME);
         File logFile = new File(ClientLog.LOG_CSV_FILE_NAME);
 
+        // Basket dir & files
         Basket.makeBasketDir(Basket.BASKET_DIR_NAME);
-
         File basketJson = new File(Basket.BASKET_JSON_FILE_NAME);
         File basketFile = new File(Basket.BASKET_TXT_FILE_NAME);
+
+        // XML
+        ShopXmlReader.makeXmlConfigDir(ShopXmlReader.XML_CONFIG_DIR_NAME);
+        ShopXmlReader shopReader = new ShopXmlReader();
+        File xmlFile = new File(ShopXmlReader.SHOP_XML_FILE);
+
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        Document doc = builder.parse(new File("shop.xml"));
+        Node root = doc.getDocumentElement();
+        System.out.println("Корневой элемент: " + root.getNodeName());
+        read(root);
+
+        if (xmlFile.exists()) {
+            Document doc1 = shopReader.buildDocument(xmlFile);
+
+            Node rootNode = shopReader.getRootNode();
+
+            read(doc1.getDocumentElement());
+            String attr = shopReader.getAttrVal(rootNode, "load", "enabled");
+
+
+        }
 
         Basket basket;
         if (basketJson.exists()) {
             basket = new Basket(Basket.loadFromJsonFile(basketJson));
-        }else if (basketFile.exists()) {
+        } else if (basketFile.exists()) {
             basket = Basket.loadFromTxtFile(basketFile);
         } else {
             basket = new Basket(products);
@@ -85,7 +116,7 @@ public class Main {
                 continue;
             }
 
-            addToCartAndPrintResult(basket,productId, productCount);
+            addToCartAndPrintResult(basket, productId, productCount);
             clientLog.log(productId, productCount);
 
         }
@@ -102,7 +133,7 @@ public class Main {
                 >>>""");
     }
 
-    private static void printTotalCart(Basket basket){
+    private static void printTotalCart(Basket basket) {
         System.out.print("Корзина:\n" + basket.printCart());
         System.out.println("Итого: " + basket.getCartTotalValue() + "руб\n");
     }
@@ -129,4 +160,24 @@ public class Main {
                 new Product("Бананы", 80),
                 new Product("Манная крупа", 60)};
     }
+
+
+    private static void read(Node node) {
+        NodeList nodeList = node.getChildNodes();
+        for (int i = 0; i < nodeList.getLength(); i++) {
+            Node node_ = nodeList.item(i);
+            if (Node.ELEMENT_NODE == node_.getNodeType()) {
+                System.out.println("Текущий узел: " + node_.getNodeName());
+                Element element = (Element) node_;
+                NamedNodeMap map = element.getAttributes();
+                for (int a = 0; a < map.getLength(); a++) {
+                    String attrName = map.item(a).getNodeName();
+                    String attrValue = map.item(a).getNodeValue();
+                    System.out.println("Атрибут: " + attrName + "; значение: " + attrValue);
+                }
+                read(node_);
+            }
+        }
+    }
+
 }

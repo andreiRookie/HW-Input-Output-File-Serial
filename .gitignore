@@ -2,6 +2,8 @@
 *.iml
 .idea
 basket/
+config xm/
+shop.xml
 client log/
 target/
 out/
