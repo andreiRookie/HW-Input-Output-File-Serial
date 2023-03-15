@@ -25,9 +25,9 @@ public class ClientLogEntry {
     @Override
     public String toString() {
         return "ClientLogEntry{" +
-                "\n\tproductNum='" + productNum + "'," +
-                "\n\tamount='" + amount +
-                '}';
+                "\n\tproductNum='" + productNum + "', " +
+                "amount='" + amount +
+                "'}";
 
     }
 }

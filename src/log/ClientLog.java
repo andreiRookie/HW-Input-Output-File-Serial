@@ -2,7 +2,6 @@ package log;
 
 import au.com.bytecode.opencsv.CSVWriter;
 import au.com.bytecode.opencsv.bean.ColumnPositionMappingStrategy;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -76,7 +75,6 @@ public class ClientLog {
     public String toString() {
         return "ClientLog{" +
                 "\n\tentries=" +
-                entries.stream().map(ClientLogEntry::toString).reduce((s, s1) -> "\n" + s + "\n" + s1) +
-                "\n}";
+                entries.stream().map(ClientLogEntry::toString).reduce((s, s1) -> "\n" + s + "\n" + s1) + "\n}";
     }
 }

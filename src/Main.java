@@ -1,10 +1,9 @@
 import log.ClientLog;
 import java.io.File;
-import java.io.IOException;
 import java.util.Scanner;
 
 public class Main {
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
 
         Scanner scanner = new Scanner(System.in);
 
@@ -17,9 +16,14 @@ public class Main {
         File logFile = new File(ClientLog.LOG_CSV_FILE_NAME);
 
         Basket.makeBasketDir(Basket.BASKET_DIR_NAME);
+
+        File basketJson = new File(Basket.BASKET_JSON_FILE_NAME);
         File basketFile = new File(Basket.BASKET_TXT_FILE_NAME);
+
         Basket basket;
-        if (basketFile.exists()) {
+        if (basketJson.exists()) {
+            basket = new Basket(Basket.loadFromJsonFile(basketJson));
+        }else if (basketFile.exists()) {
             basket = Basket.loadFromTxtFile(basketFile);
         } else {
             basket = new Basket(products);
@@ -36,6 +40,10 @@ public class Main {
 
             if (input.equalsIgnoreCase("txt")) {
                 basket.saveTxt(basketFile);
+                continue;
+            }
+            if (input.equalsIgnoreCase("jsn")) {
+                basket.saveJson(basketJson);
                 continue;
             }
 
@@ -83,36 +91,14 @@ public class Main {
         }
     }
 
-//    private static void inputChecks(String input, Basket basket, ClientLog clientLog) {
-//
-//        if (input.equalsIgnoreCase("log")) {
-//            System.out.println(clientLog);
-//            continue;
-//        }
-//
-//        if (input.equalsIgnoreCase("txt")) {
-//            basket.saveTxt(basketFile);
-//            continue;
-//        }
-//
-//        if (input.equalsIgnoreCase("cart")) {
-//            printTotalCart(basket);
-//            continue;
-//        }
-//
-//        if (input.equalsIgnoreCase("exit")) {
-//            printTotalCart(basket);
-//            break;
-//        }
-//    }
-
     private static void showMenu() {
         System.out.print("""
                 Введите номер товара и его количество,
                 `txt` - для сохранния корзины в файл .txt,
+                `jsn` - для сохранния корзины в файл .json,
                 `cart` - для вывода итоговой корзины:
                 `log` - для вывода журанала покупок
-                `exit` - для выхода
+                `exit` - для сохранения log и выхода
                 >>>""");
     }
 
