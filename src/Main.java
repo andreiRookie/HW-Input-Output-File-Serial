@@ -1,12 +1,10 @@
 import log.ClientLog;
 import org.w3c.dom.*;
 import org.xml.sax.SAXException;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Scanner;
 
 public class Main {
@@ -26,36 +24,43 @@ public class Main {
         // Basket dir & files
         Basket.makeBasketDir(Basket.BASKET_DIR_NAME);
         File basketJson = new File(Basket.BASKET_JSON_FILE_NAME);
-        File basketFile = new File(Basket.BASKET_TXT_FILE_NAME);
+        File basketText = new File(Basket.BASKET_TXT_FILE_NAME);
+
 
         // XML
-        ShopXmlReader.makeXmlConfigDir(ShopXmlReader.XML_CONFIG_DIR_NAME);
-        ShopXmlReader shopReader = new ShopXmlReader();
-        File xmlFile = new File(ShopXmlReader.SHOP_XML_FILE);
+        ConfigXmlReader.makeXmlConfigDir(ConfigXmlReader.XML_CONFIG_DIR_NAME);
+        ConfigXmlReader configXmlReader = new ConfigXmlReader();
+        File xmlConfigFile = new File(ConfigXmlReader.SHOP_XML_FILE);
+        Document doc = configXmlReader.buildDocument(xmlConfigFile);
 
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        DocumentBuilder builder = factory.newDocumentBuilder();
-        Document doc = builder.parse(new File("shop.xml"));
-        Node root = doc.getDocumentElement();
-        System.out.println("Корневой элемент: " + root.getNodeName());
-        read(root);
+        HashMap<String, String> loadOptions;
+        HashMap<String, String> saveOptions;
+        HashMap<String, String> logOptions;
 
-        if (xmlFile.exists()) {
-            Document doc1 = shopReader.buildDocument(xmlFile);
-
-            Node rootNode = shopReader.getRootNode();
-
-            read(doc1.getDocumentElement());
-            String attr = shopReader.getAttrVal(rootNode, "load", "enabled");
-
-
-        }
+        loadOptions = configXmlReader.getLoadOptions();
+        saveOptions = configXmlReader.getSaveOptions();
+        logOptions = configXmlReader.getLogOptions();
 
         Basket basket;
-        if (basketJson.exists()) {
-            basket = new Basket(Basket.loadFromJsonFile(basketJson));
-        } else if (basketFile.exists()) {
-            basket = Basket.loadFromTxtFile(basketFile);
+
+        boolean isLoadEnabled = Boolean.parseBoolean(loadOptions.get(ConfigXmlReader.ENABLED));
+        boolean isLoadFormatJson = loadOptions.get(ConfigXmlReader.FORMAT).equals(ConfigXmlReader.FORMAT_JSON);
+        boolean isLoadFormatText = loadOptions.get(ConfigXmlReader.FORMAT).equals(ConfigXmlReader.FORMAT_TEXT);
+
+        boolean isSaveEnabled = Boolean.parseBoolean(saveOptions.get(ConfigXmlReader.ENABLED));
+        boolean isSaveFormatJson = saveOptions.get(ConfigXmlReader.FORMAT).equals(ConfigXmlReader.FORMAT_JSON);
+        boolean isSaveFormatText = saveOptions.get(ConfigXmlReader.FORMAT).equals(ConfigXmlReader.FORMAT_TEXT);
+
+        if (isLoadEnabled) {
+            if (basketJson.exists() && isLoadFormatJson) {
+                basket = new Basket(Basket.loadFromJsonFile(basketJson));
+                System.out.println("Loaded from basketJson");
+            } else if (basketText.exists() && isLoadFormatText) {
+                basket = Basket.loadFromTxtFile(basketText);
+                System.out.println("Loaded from basketText");
+            } else {
+                basket = new Basket(products);
+            }
         } else {
             basket = new Basket(products);
         }
@@ -70,7 +75,7 @@ public class Main {
             }
 
             if (input.equalsIgnoreCase("txt")) {
-                basket.saveTxt(basketFile);
+                basket.saveTxt(basketText);
                 continue;
             }
             if (input.equalsIgnoreCase("jsn")) {
@@ -84,7 +89,10 @@ public class Main {
             }
 
             if (input.equalsIgnoreCase("exit")) {
-                clientLog.exportAsCSV(logFile);
+                if (Boolean.parseBoolean(logOptions.get(ConfigXmlReader.ENABLED))) {
+                    clientLog.exportAsCSV(new File("./client log/" + logOptions.get(ConfigXmlReader.FILENAME)));
+                    System.out.println("Logging enabled, logFile saved");
+                }
                 printTotalCart(basket);
                 break;
             }
@@ -118,6 +126,15 @@ public class Main {
 
             addToCartAndPrintResult(basket, productId, productCount);
             clientLog.log(productId, productCount);
+
+            if (isSaveEnabled && isSaveFormatJson) {
+                basket.saveJson(basketJson);
+                System.out.println("Saving enabled, json saved");
+            }
+            if (isSaveEnabled && isSaveFormatText) {
+                basket.saveTxt(basketText);
+                System.out.println("Saving enabled, txt saved");
+            }
 
         }
     }
@@ -162,6 +179,7 @@ public class Main {
     }
 
 
+    // метод чтения из лекции, рекурсивно по атрибутам
     private static void read(Node node) {
         NodeList nodeList = node.getChildNodes();
         for (int i = 0; i < nodeList.getLength(); i++) {
