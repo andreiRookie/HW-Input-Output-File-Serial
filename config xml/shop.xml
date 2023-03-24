@@ -2,7 +2,7 @@
   <load>
     <enabled>true</enabled>
     <fileName>basket.json</fileName>
-    <format>text</format>
+    <format>json</format>
   </load>
   
   <save>

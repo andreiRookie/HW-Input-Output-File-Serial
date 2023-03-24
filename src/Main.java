@@ -23,7 +23,7 @@ public class Main {
 
         // Basket dir & files
         Basket.makeBasketDir(Basket.BASKET_DIR_NAME);
-        File basketJson = new File(Basket.BASKET_JSON_FILE_NAME);
+        File basketJson = new File(Basket.BASKET_JSON_BY_GSON_FILE_NAME);
         File basketText = new File(Basket.BASKET_TXT_FILE_NAME);
 
 
@@ -53,7 +53,7 @@ public class Main {
 
         if (isLoadEnabled) {
             if (basketJson.exists() && isLoadFormatJson) {
-                basket = new Basket(Basket.loadFromJsonFile(basketJson));
+                basket = Basket.loadFromJsonFile(basketJson);
                 System.out.println("Loaded from basketJson");
             } else if (basketText.exists() && isLoadFormatText) {
                 basket = Basket.loadFromTxtFile(basketText);

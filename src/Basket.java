@@ -1,16 +1,20 @@
 
+import com.google.gson.Gson;
 import org.json.simple.*;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 
 public class Basket {
 
     public static final String BASKET_DIR_NAME = "./basket";
     public static final String BASKET_TXT_FILE_NAME = "./basket/basket.txt";
     public static final String BASKET_JSON_FILE_NAME = "./basket/basket.json";
+
+    public static final String BASKET_JSON_BY_GSON_FILE_NAME = "./basket/basketGson.json";
     public static final String PRODUCTS = "products";
     private Product[] products;
 
@@ -19,41 +23,22 @@ public class Basket {
     }
 
     public void saveJson(File jsonFile) {
-        JSONObject basketObj = basketToJSONObject();
+        Gson gson = new Gson();
         try (FileWriter writer  = new FileWriter(jsonFile)){
-            writer.write(basketObj.toJSONString());
+            writer.write(gson.toJson(this));
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    static Product[] loadFromJsonFile(File jsonFile) {
-        JSONObject jsonObject = new JSONObject();
-        JSONParser parser = new JSONParser();
-
-        try {
-            jsonObject = (JSONObject) parser.parse(new FileReader(jsonFile));
-
-
-        } catch (IOException | ParseException e) {
-            e.printStackTrace();
+    static Basket loadFromJsonFile(File jsonFile) throws IOException {
+        Basket basket;
+        try (Scanner scanner = new Scanner(jsonFile)) {
+            String json = scanner.nextLine();
+            Gson gson = new Gson();
+            basket = gson.fromJson(json, Basket.class);
         }
-        JSONArray jsonArray = (JSONArray) jsonObject.get(PRODUCTS);
-
-        Product[] productsArray = new Product[jsonArray.size()];
-
-        try {
-            for (int i =0; i< jsonArray.size(); i++) {
-
-                JSONObject prodObj = (JSONObject) jsonArray.get(i);
-
-                Product product = ProductService.fromJSONObject(prodObj);
-                productsArray[i] = product;
-            }
-        } catch (ClassCastException e) {
-            e.printStackTrace();
-        }
-        return productsArray;
+        return basket;
     }
 
     public JSONObject basketToJSONObject() {
